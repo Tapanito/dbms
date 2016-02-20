@@ -1,0 +1,72 @@
+\documentclass[a4paper, titlepage, 11pt]{article}
+\usepackage{cite}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{pbox}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage[margin=1in]{geometry}
+\usepackage{wrapfig}
+\usepackage{lscape}
+\usepackage{rotating}
+\usepackage{epstopdf}
+
+\definecolor{bluekeywords}{rgb}{0.13,0.13,1}
+\definecolor{purplekeywords}{rgb}{0.25,0,0.25}
+\definecolor{greencomments}{rgb}{0,0.5,0}
+\definecolor{redstrings}{rgb}{0.9,0,0}
+
+\begin{document}
+\lstdefinestyle{dafny}{language=dafny,
+showspaces=false,
+showtabs=false,
+breaklines=true,
+showstringspaces=false,
+breakatwhitespace=true,
+escapeinside={(*@}{@*)},
+commentstyle=\color{greencomments},
+keywordstyle=\color{purplekeywords}\bfseries,
+stringstyle=\color{redstrings},
+basicstyle=\small\sffamily
+}
+\lstdefinestyle{sharpc}{language=[Sharp]C,
+showspaces=false,
+showtabs=false,
+breaklines=true,
+showstringspaces=false,
+breakatwhitespace=true,
+escapeinside={(*@}{@*)},
+commentstyle=\color{greencomments},
+keywordstyle=\color{bluekeywords}\bfseries,
+stringstyle=\color{redstrings},
+basicstyle=\ttfamily
+}
+\doublespacing
+
+\author{Vytautas Tumas}
+\begin{singlespace}
+%\maketitle
+\begin{titlepage}
+	\centering
+	{\huge\bfseries NoSQL Data Storage\par}
+	\vspace{1cm}
+	{\scshape\LARGE Big Data Management\par}
+		\vspace{1cm}
+
+	\vspace{2cm}
+	{\Large\itshape Vytautas Tumas(vt50)\par}
+		{Software Engineering Year 4\par}
+	\vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+\tableofcontents
+\newpage
+\end{singlespace}
+\section{Database Management System}
+For this coursework I chose MongoDB DBMS. MongoDB is a NoSQL database, it trades the table-based database structure for JSON document store with dynamic scheme. Schemas in relational databases have to be predefined before data can be added to the database. This approach fits poorly in iterative development approach. Every time new data field is added to a table, the schema of that table will have to be updated. In addition, the existing data will have to be migrated to the new schema.\par
+In contrast, databases which employ dynamic schemes do not require predefined schemas to store, i.e the DBMS does not need to know anything about the data in advance, to store it. Therefore, new fields can be easily added to the new database, thus reducing database administration time. Typically the developers will have to enforce data quality control on the application side.
+\end{document}
