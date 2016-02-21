@@ -157,7 +157,7 @@ def query_4(count):
     i+=1
   return movies
 
-# find the most popular movies by occupation
+# find the most popular movie by occupation
 def query_5(occupation = None):
   database = connect_to_mongo()
   users = database[USER].find({"occupation" : occupation})
@@ -167,8 +167,16 @@ def query_5(occupation = None):
     for item in result:
       if item['movie'] not in movies:
           movies.append(item['movie'])
+  topMovie = None
+  for movie in movies:
+    pipeline = [
+      {"$match" : {"$movie": movie['_id']}},
+      {"$group": {"_id":"$movie", "rating":{"$avg":"$rating"}, "count" : {"$sum":1}}},
+      {"$sort":{"count": -1}}
+    ]
+    result = database[RATING].aggregate(pipeline)
+    return result
 
-  return movies
 
 if __name__  == "__main__":
 	migrate()
