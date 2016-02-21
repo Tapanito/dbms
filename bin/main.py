@@ -132,8 +132,7 @@ def query_2(year):
 def query_3(genres):
 	database = connect_to_mongo()
 	query = []
-	for genre in genres:
-		query += ["$in" : [genre]]
+
 
 	print(query)
 	#return movies
