@@ -163,23 +163,10 @@ def query_5(occupation = None):
   users = database[USER].find({"occupation" : occupation})
   movies = []
   for user in users:
-    pipeline = [
-      {"$match" : {"user":user['_id']}},
-      {"$group": {
-          "_id":"$user",
-          "count" : {"$sum":1},
-          "movies" : {"$push" : "$movie"}
-        }
-      },
-      {"$sort":{
-        "count": -1}
-      }
-    ]
-    result = database[RATING].aggregate(pipeline)
+    result = database[RATING].find({"user": user['_id']})
     for item in result:
-      for movie in item['movies']:
-        if str(movie) not in movies:
-          movies.append(str(movie))
+      if item['movie'] not in movies:
+          movies.append(item['movie'])
 
   return movies
 
