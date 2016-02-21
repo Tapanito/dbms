@@ -146,6 +146,5 @@ def query_5():
   print("")
 
 if __name__  == "__main__":
-<<<<<<< HEAD
 	migrate()
 
