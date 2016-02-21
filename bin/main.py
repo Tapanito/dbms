@@ -163,7 +163,7 @@ def query_5(occupation = None):
   users = database[USER].find({"occupation" : occupation})
   for user in users:
     pipeline = [
-      {"$match" : {"$user":user['_id']}},
+      {"$match" : {"user":user['_id']}},
       {"$group": {
           "_id":"$user",
           "count" : {"$sum":1},
