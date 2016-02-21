@@ -182,7 +182,7 @@ def query_5(occupation = None):
       if topMovie['rating'] < tmp['rating']:
         topMovie = tmp
 
-  return database[MOVIE].find({_id: topMovie['_id']})
+  return database[MOVIE].find({'_id': topMovie['_id']})
 
 
 if __name__  == "__main__":
