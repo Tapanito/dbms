@@ -130,9 +130,12 @@ def query_2(year):
 
 # find the most popular movies of a given year
 # Movie is popular if it has more than 1000 ratings
-def query_3(year):
+def query_3(year = None):
   database = connect_to_mongo()
-  movies = query_2(year)
+  if year is not None:
+    movies = query_2(year)
+  else:
+    movies = database[MOVIE].find()
   topRated = []
   for movie in movies:
     count = database[RATING].count({"movie" : movie["_id"]})
