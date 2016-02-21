@@ -178,8 +178,8 @@ def query_5(occupation = None):
     result = database[RATING].aggregate(pipeline)
     for item in result:
       for movie in item['movies']:
-        if movie not in movies:
-          movies.append(movie)
+        if str(movie) not in movies:
+          movies.append(str(movie))
 
   return movies
 
