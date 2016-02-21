@@ -172,8 +172,8 @@ def query_5(occupation = None):
         "count": -1}
       }
     ]
-  result = database[USER].aggregate(pipeline)
-  return result
+    result = database[RATING].aggregate(pipeline)
+    return result
 
 if __name__  == "__main__":
 	migrate()
