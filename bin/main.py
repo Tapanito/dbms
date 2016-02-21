@@ -161,10 +161,11 @@ def query_4(count):
 def query_5(occupation = None):
   database = connect_to_mongo()
   pipeline = [
-    {"$group": {"occupation":"$occupation", "count" : {"$sum":1}}},
+    {"$group": {"ocupation":"$ocupation", "count" : {"$sum":1}}},
     {"$sort":{"count": -1}}
   ]
   result = database[USER].aggregate(pipeline)
+  return result
 
 if __name__  == "__main__":
 	migrate()
