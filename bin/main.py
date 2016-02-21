@@ -136,6 +136,7 @@ def query_3(year):
   topRated = []
   for movie in movies:
     count = database[RATING].count({"movie" : movie["_id"]})
+    print("Count: " + str(count))
     if count > 1000:
       topRated.append(movie.copy())
   return topRated
