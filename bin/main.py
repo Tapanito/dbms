@@ -73,7 +73,7 @@ def migrate_rating():
       if user is not None:
         ratingDict['user'] = ObjectId(str(user['_id']))
         ratingDict['movie'] = ObjectId(str(movie['_id']))
-        dicts.append(ratingD  ict.copy())
+        dicts.append(ratingDict.copy())
         count += 1
       else:
         print("User not found")
@@ -137,7 +137,7 @@ def query_3(year):
   for movie in movies:
     count = database[RATING].count({"movie" : movie["_id"]})
     if count > 1000:
-      topRated.append(movie)
+      topRated.append(movie.copy())
   return topRated
 
 def query_4():
