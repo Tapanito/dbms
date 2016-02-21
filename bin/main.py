@@ -175,7 +175,14 @@ def query_5(occupation = None):
       {"$sort":{"count": -1}}
     ]
     result = database[RATING].aggregate(pipeline)
-    return result
+    tmp = result.next()
+    if topMovie is None:
+      topMovie = tmp
+    else:
+      if topMovie['rating'] < tmp['rating']:
+        topMovie = tmp
+
+  return database[MOVIE].find({_id: topMovie['_id']})
 
 
 if __name__  == "__main__":
