@@ -1,7 +1,7 @@
 \documentclass[a4paper, titlepage, 11pt]{article}
 \usepackage{cite}
 \usepackage{natbib}
-\usepackage{listings}
+\usepackage[procnames]{listings}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{pbox}
@@ -10,8 +10,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{wrapfig}
 \usepackage{lscape}
-\usepackage{rotating}
-\usepackage{epstopdf}
+\usepackage[toc,page]{appendix}
 
 \definecolor{bluekeywords}{rgb}{0.13,0.13,1}
 \definecolor{purplekeywords}{rgb}{0.25,0,0.25}
@@ -19,30 +18,19 @@
 \definecolor{redstrings}{rgb}{0.9,0,0}
 
 \begin{document}
-\lstdefinestyle{dafny}{language=dafny,
-showspaces=false,
-showtabs=false,
-breaklines=true,
-showstringspaces=false,
-breakatwhitespace=true,
-escapeinside={(*@}{@*)},
-commentstyle=\color{greencomments},
-keywordstyle=\color{purplekeywords}\bfseries,
-stringstyle=\color{redstrings},
-basicstyle=\small\sffamily
-}
-\lstdefinestyle{sharpc}{language=[Sharp]C,
-showspaces=false,
-showtabs=false,
-breaklines=true,
-showstringspaces=false,
-breakatwhitespace=true,
-escapeinside={(*@}{@*)},
-commentstyle=\color{greencomments},
-keywordstyle=\color{bluekeywords}\bfseries,
-stringstyle=\color{redstrings},
-basicstyle=\ttfamily
-}
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+\definecolor{green}{RGB}{0,150,0}
+ 
+\lstset{language=Python, 
+        basicstyle=\ttfamily\small, 
+        keywordstyle=\color{keywords},
+        commentstyle=\color{comments},
+        stringstyle=\color{red},
+        showstringspaces=false,
+        identifierstyle=\color{green},
+        procnamekeys={def,class}}
 \doublespacing
 
 \author{Vytautas Tumas}
@@ -67,6 +55,155 @@ basicstyle=\ttfamily
 \newpage
 \end{singlespace}
 \section{Database Management System}
-For this coursework I chose MongoDB DBMS. MongoDB is a NoSQL database, it trades the table-based database structure for JSON document store with dynamic scheme. Schemas in relational databases have to be predefined before data can be added to the database. This approach fits poorly in iterative development approach. Every time new data field is added to a table, the schema of that table will have to be updated. In addition, the existing data will have to be migrated to the new schema.\par
-In contrast, databases which employ dynamic schemes do not require predefined schemas to store, i.e the DBMS does not need to know anything about the data in advance, to store it. Therefore, new fields can be easily added to the new database, thus reducing database administration time. Typically the developers will have to enforce data quality control on the application side.
+For this coursework I chose MongoDB DBMS. MongoDB falls into the NoSQL database category, a single database holds a set of collections and each collection contains a group of documents. Collections are used to store related data, they are the equivalent of a table in RDBMS, however a collection does not enforce a schema. A document is a set of key-value pairs, because MongoDB uses dynamic schemas, the documents in the collection are not required to have the same keys.\par
+MongoDB is easily scalable system. Unlike traditional RDBMS where the way to improve the performance is to upgrade the machine the database is running, MongoDB scales out. It uses a process called sharding to distribute data across commodity hardware. Each shard of the database is able to run on a separate machine, thus to cope with the data growth, additional machines will have to be added to the database network. Each shard is an independent database, a collection of shards makes up a single logical database. 
+\section{Data Model}
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+      \includegraphics[scale=0.5]{images/dbms.pdf}
+	  \caption{MongoDB schema model}
+	  \label{fig:model}
+  \end{center}
+\end{wrapfigure}
+Figure~\ref{fig:model} shows the model of the new database. Unlike in the traditional model, the \textit{movies} schema has been updated to hold the genre information of the particular movie. The main motivation behind this, is that the genre of a movie   and the name of the genre will not change, thus there is no need to store these in a separate collection. However, I have discovered that querying for movies that have multiple genres is more complicated than in a RDBMS model, the queries require multiple \textbf{\$in} operators aggregated with the \textbf{\$and} operator. The \textit{legacy\_id} field was added to help with the migration of the \textit{ratings} table. The only change to the \textit{users} schema is the added \textit{legacy\_id} field to help with the migration of the \textit{ratings} table.\par
+The main complexity of the RDBMS model is the relationship in the ratings model, between the user and the movie. I explored three ways to store the ratings data. \par
+For the first schema, I planned to have a list of ratings for each movie embedded into the movie document, however this schema was flawed. Firstly, every time a movie is rated, the document for the particular movie will have to be updated. Because the update mechanism is implemented on the users side and NoSQL database do not provide field constraints for embedded documents, a single user could potentially rate a movie more than once. The second drawback is that a single document can be upto 16MB in size. As the result only a limited number of ratings can be stored in the document. Finally, assuming it is possible to overcome the 16MB document size constraint, a problem will occur when sharding the database. It is possible to split a collection over multiple shards, however it is not possible to split a single document over multiple shards. Therefore, the more ratings the single movie has, the longer it will take to query it. The second schema, is similar to the first, but instead of storing the ratings embedded in the movie document, store user rating embedded in the user document. In addition to the issues which apply to the first schema, now when ever we want to query the rating of a single movie, we will have to retrieve every movie document to check whether the user has rated the movie, this is an unnecessary level of complexity, which can be avoided by storing the ratings in a separate collection.\par
+By storing the movie ratings data in a separate collection we can add a \textit{unique compound index} on the movie and user ids to ensure that a user can rate a movie only once. Because each document in the ratings collection represents a single rating we don't have to worry about the size of one document. Lastly, because the ratings are stored in a separate collection, the collection can be easily shared and the overall performance improved.
+\section{Migration}
+To migrate the data from MySQL to MongoDB I used the \textit{peewee} library to access the MySQL database and the \textit{pymongo} library to access the MongoDB. The \textit{peewee} library provides the tools to generate a class for the each database table (Code ~\ref{fig:py1}), thus I could easily query the MySQL database without worrying about issues with encoding. The users table (Code ~\ref{fig:py2}) was migrated by selecting all the users from the movielens database, adding a new \textit{legacyId} field for reference, and writing the user to the MongoDB \textit{users} collection. The movies table (Code ~\ref{fig:py3}) was migrated in a similar way, to make future querying by date easier, the \textit{release\_date} field was converted to \textit{datetime} representation. To migrate the ratings collection (Code ~\ref{fig:py4}), we first select all the movies, then iterate the list finding the ratings for the movie. For each rating, we find the related user, update the rating document with the new \textit{id} of the movie and the user and write the new document to the collection. The migration of the users and movies table took around 30 seconds each as these tables 943 and 1682 entries respectively. The movie ratings table took around 10 minutes to migrate, this is because for each movie rating we have to query the related user, as the result the same user is likely to be fetched more than once. This problem can be solved by introducing a cache for users. Before fetching the user information from the database, the script would check a local dictionary of $<id$, $user>$ pairs, if the user is not in the cache, the information is then fetched from the database and added to the cache.
+\begin{appendices}
+\section*{Class representation of movielens tables.}
+\begin{singlespace}
+\label{fig:py1}\begin{lstlisting}
+from peewee import *
+
+database = MySQLDatabase('movielens', **{'user': 'vt50', 'password': 'abcvt50354', 'host': 'mysql-server-1'})
+
+class UnknownField(object):
+    pass
+
+class BaseModel(Model):
+    class Meta:
+        database = database
+
+class Genres(BaseModel):
+    genre = CharField(null=True)
+
+    class Meta:
+        db_table = 'genres'
+
+class Movies(BaseModel):
+    imdburl = CharField(db_column='IMDBURL', null=True)
+    release_date = CharField(null=True)
+    title = CharField(null=True)
+    video = CharField(null=True)
+
+    class Meta:
+        db_table = 'movies'
+
+class MovieGenres(BaseModel):
+    genre = ForeignKeyField(db_column='genre', rel_model=Genres, to_field='id')
+    movie = ForeignKeyField(db_column='movie', rel_model=Movies, to_field='id', related_name='genres')
+
+    class Meta:
+        db_table = 'movie_genres'
+        indexes = (
+            (('movie', 'genre'), True),
+        )
+        primary_key = CompositeKey('genre', 'movie')
+
+class Users(BaseModel):
+    age = IntegerField(null=True)
+    gender = CharField(null=True)
+    occupation = CharField(null=True)
+    zip_code = CharField(null=True)
+
+    class Meta:
+        db_table = 'users'
+
+class Ratings(BaseModel):
+    movie = ForeignKeyField(db_column='movie', rel_model=Movies, to_field='id', related_name='ratings')
+    rating = IntegerField(null=True)
+    timestamp = IntegerField(null=True)
+    user = ForeignKeyField(db_column='user', rel_model=Users, to_field='id')
+
+    class Meta:
+        db_table = 'ratings'
+        indexes = (
+            (('user', 'movie'), True),
+        )
+        primary_key = CompositeKey('movie', 'user')
+
+
+\end{lstlisting}
+\label{fig:py2}\section*{User table migration}
+\begin{lstlisting}
+def migrate_user():
+  drop_collection(USER)
+  count = 0
+  for user in Users.select():
+    userDict = model_to_dict(user)
+    userDict['legacyId'] = userDict.pop('id', None)
+    insert_to_mongo(userDict, USER)
+    count += 1
+  print("Users migrated " + str(count))
+\end{lstlisting}
+\label{fig:py3}\section*{Movie table migration}
+\begin{lstlisting}
+def migrate_movie():
+  drop_collection(MOVIE)
+  count = 0
+  for movie in Movies.select():
+    movieDict = model_to_dict(movie)
+    #init the genre list
+    movieDict['genre'] = []
+    # remove the id field, mongo will generate it's own but keep the legacyId
+    movieDict['legacyId'] = movieDict.pop('id', None)
+    try:
+      movieDict['release_date'] = datetime.strptime(movieDict['release_date'], '%d-%b-%Y')
+    except:
+      date = get_movie_date(movieDict['title'])
+      if date is not None:
+        movieDict['release_date'] = datetime.datetime(int(date), 1, 1, 0, 0)
+      else:
+        movieDict['release_date'] = None
+    # add related genres
+    for genre in movie.genres:
+      movieDict['genre'] += [genre.genre.genre]
+    insert_to_mongo(movieDict, MOVIE)
+    count += 1
+  print("Movies migrated " + str(count))
+\end{lstlisting}
+\label{fig:py4}\section*{Movie rating migration}
+\begin{lstlisting}
+def migrate_rating():
+  drop_collection(RATING)
+  count = 0
+  movies = get_collection_items(MOVIE)
+  for movie in movies:
+    dicts = []
+    # find all ratings for the movie
+    ratings = Ratings.select().where(Ratings.movie == movie['legacyId'])
+    for rating in ratings:
+      ratingDict = model_to_dict(rating)
+      ratingDict['legacyId'] = ratingDict.pop('id', None)
+      # find the user who gave the rating
+      user = find_item(USER, 'legacyId', rating.user.id)
+      if user is not None:
+        ratingDict['user'] = ObjectId(str(user['_id']))
+        ratingDict['movie'] = ObjectId(str(movie['_id']))
+        dicts.append(ratingDict.copy())
+        count += 1
+      else:
+        print("User not found")
+    insert_many(RATING, dicts)
+    print("Count: " + str(count))
+  print("Ratings migrated " + str(count))
+\end{lstlisting}
+
+\end{singlespace}
+
+
+\end{appendices}
+
 \end{document}
