@@ -170,7 +170,7 @@ def query_5(occupation = None):
   topMovie = None
   for movie in movies:
     pipeline = [
-      {"$match" : {"$movie": movie['_id']}},
+      {"$match" : {"movie": movie}},
       {"$group": {"_id":"$movie", "rating":{"$avg":"$rating"}, "count" : {"$sum":1}}},
       {"$sort":{"count": -1}}
     ]
