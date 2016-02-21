@@ -140,7 +140,7 @@ def query_3(year):
       topRated.append(movie.copy())
   return topRated
 
-# find the x x x x x most rated movies of all time
+# find the x most rated movies of all time
 def query_4(count):
   database = connect_to_mongo()
   pipeline = [
@@ -157,8 +157,14 @@ def query_4(count):
     i+=1
   return movies
 
-def query_5():
-  print("")
+# find the most popular movies by occupation
+def query_5(occupation = None):
+  database = connect_to_mongo()
+  pipeline = [
+    {"$group": {"occupation":"$occupation", "count" : {"$sum":1}}},
+    {"$sort":{"count": -1}}
+  ]
+  result = database[USER].aggregate(pipeline)
 
 if __name__  == "__main__":
 	migrate()
