@@ -160,10 +160,18 @@ def query_4(count):
 # find the most popular movies by occupation
 def query_5(occupation = None):
   database = connect_to_mongo()
-  pipeline = [
-    {"$group": {"_id":"$occupation", "count" : {"$sum":1}}},
-    {"$sort":{"count": -1}}
-  ]
+  users = database[USER].find({"occupation" : occupation})
+  for user in users:
+    pipeline = [
+      {"$group": {
+        "_id":"$user",
+        "count" : {"$sum":1}},
+        "movies" : {"$push" : "$movie"}
+      },
+      {"$sort":{
+        "count": -1}
+      }
+    ]
   result = database[USER].aggregate(pipeline)
   return result
 
