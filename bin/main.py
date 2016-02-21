@@ -161,6 +161,7 @@ def query_4(count):
 def query_5(occupation = None):
   database = connect_to_mongo()
   users = database[USER].find({"occupation" : occupation})
+  movies = []
   for user in users:
     pipeline = [
       {"$match" : {"user":user['_id']}},
@@ -175,7 +176,12 @@ def query_5(occupation = None):
       }
     ]
     result = database[RATING].aggregate(pipeline)
-    return result
+    for item in result:
+      for movie in item['movies']:
+        if movie not in movies:
+          movies.append(movie)
+
+    return return movies
 
 if __name__  == "__main__":
 	migrate()
