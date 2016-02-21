@@ -181,7 +181,7 @@ def query_5(occupation = None):
         if movie not in movies:
           movies.append(movie)
 
-    return movies
+  return movies
 
 if __name__  == "__main__":
 	migrate()
