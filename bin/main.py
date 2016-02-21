@@ -118,7 +118,7 @@ def query_1():
   # get the top rated movie
   item = result.next()
   # find the movie entry
-  print(database[MOVIE].find_one({"_id": item['_id']}))
+  return database[MOVIE].find_one({"_id": item['_id']})
 
 # Find all the movie released in a given year
 def query_2(year):
@@ -129,23 +129,34 @@ def query_2(year):
   return movies
 
 # find the most popular movies of a given year
-# Movie is popular if it has more than 1000 ratings
-def query_3(year = None):
+# Movie is popular if it has more than 500 ratings
+def query_3(year):
   database = connect_to_mongo()
-  if year is not None:
-    movies = query_2(year)
-  else:
-    movies = database[MOVIE].find()
   topRated = []
-  for movie in movies:
+  for movie in query_2(year):
     count = database[RATING].count({"movie" : movie["_id"]})
     print("Count: " + str(count))
-    if count > 1000:
+    if count > 500:
       topRated.append(movie.copy())
   return topRated
 
-def query_4():
-  print("")
+# find the x x x x x most rated movies of all time
+def query_4(count):
+  database = connect_to_mongo()
+  pipeline = [
+    {"$group": {"_id":"$movie", "rating":{"$avg":"$rating"}, "count" : {"$sum":1}}},
+    {"$sort":{"count": -1}}
+  ]
+  result = database[RATING].aggregate(pipeline)
+  i = 0
+  movies = []
+  for item in result:
+    if i >= count:
+      break
+    movies.append(find_item(MOVIE, "_id", item["_id"]))
+    i+=1
+  return movies
+
 def query_5():
   print("")
 
