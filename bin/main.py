@@ -161,7 +161,7 @@ def query_4(count):
 def query_5(occupation = None):
   database = connect_to_mongo()
   pipeline = [
-    {"$group": {"ocupation":"$ocupation", "count" : {"$sum":1}}},
+    {"$group": {"occupation":"$occupation", "count" : {"$sum":1}}},
     {"$sort":{"count": -1}}
   ]
   result = database[USER].aggregate(pipeline)
