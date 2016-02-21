@@ -164,9 +164,10 @@ def query_5(occupation = None):
   for user in users:
     pipeline = [
       {"$group": {
-        "_id":"$user",
-        "count" : {"$sum":1}},
-        "movies" : {"$push" : "$movie"}
+          "_id":"$user",
+          "count" : {"$sum":1},
+          "movies" : {"$push" : "$movie"}
+        }
       },
       {"$sort":{
         "count": -1}
